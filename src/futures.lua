@@ -15,7 +15,8 @@ do
 			_next_tasks = {}, -- the tasks that the Future is gonna run once it is done
 			_next_tasks_index = 0, -- the tasks table pointer
 			result = nil or table, -- the Future result; if it is nil, it didn't end yet.
-			cancelled = false -- whether the future is cancelled or not
+			cancelled = false, -- whether the future is cancelled or not
+			done = false -- whether the future is done or not
 		}
 	]]
 	function Future.new(loop, obj)
@@ -33,12 +34,13 @@ do
 		@param result<table> A table (with no associative members) to set as the result. Can have multiple items.
 	]]
 	function Future:set_result(result)
-		if self.result then
+		if self.done then
 			error("The Future has already been done.", 2)
 		elseif self.cancelled then
 			error("The Future was cancelled.", 2)
 		end
 
+		self.done = true
 		self.result = result
 
 		local task
@@ -69,18 +71,20 @@ do
 			_is_future = true, -- used to denote that it is a Future object
 			loop = EventLoop, -- the loop that the future belongs to
 			quantity = quantity, -- the quantity of values that the object will return
-			done = 0, -- the quantity of values that the object has prepared
+			_done = 0, -- the quantity of values that the object has prepared
 			_next_tasks = {}, -- the tasks that the future is gonna run once it is done
 			_next_tasks_index = 0, -- the tasks table pointer
 			result = nil or table, -- the Future result; if it is nil, the future is not completely done.
 			_result = table -- the FutureSemaphore partial or complete result; if it is nil, no result was given in.
 			cancelled = false -- whether the future is cancelled or not
+			cancelled = false, -- whether the future is cancelled or not
+			done = false -- whether the future is done or not
 		}
 	]]
 	function FutureSemaphore.new(loop, quantity, obj)
 		obj = Future(loop, obj)
 		obj.quantity = quantity
-		obj.done = 0
+		obj._done = 0
 		obj._result = {}
 		return setmetatable(obj, meta)
 	end
@@ -92,7 +96,7 @@ do
 		@param index<number> The index of the result. Can't be repeated.
 	]]
 	function FutureSemaphore:set_result(result, index)
-		if self.result then
+		if self.done then
 			error("The FutureSemaphore has already been done.", 2)
 		elseif self.cancelled then
 			error("The FutureSemaphore was cancelled.", 2)
@@ -100,12 +104,13 @@ do
 
 		if not self._result[index] then
 			self._result[index] = result
-			self.done = self.done + 1
+			self._done = self._done + 1
 		else
 			error("The given semaphore spot is already taken.", 2)
 		end
 
-		if self.done == self.quantity then
+		if self._done == self.quantity then
+			self.done = true
 			self.result = self._result
 
 			local task_result, task = {self.result}
