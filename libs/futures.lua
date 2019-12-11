@@ -222,11 +222,13 @@ do
 		@name set_error
 		@desc Sets a FutureSemaphore error and calls all the scheduled tasks if it is completely done
 		@param result<string> A string to set as the error message.
+		@param safe<boolean> Whether to cancel the error if the result can't be set.
 		@param index<number> The index of the result. Can't be repeated.
-		@param safe?<boolean> Whether to cancel the error if the result can't be set. @default false.
 	]]
-	FutureSemaphore.set_error = FutureSemaphore.set_result
-	-- The behaviour is the same on this future variation
+	function FutureSemaphore:set_error(result, safe, index)
+		return self:set_result(result, safe, index)
+		-- The behaviour is the same on this future variation
+	end
 end
 
 return {

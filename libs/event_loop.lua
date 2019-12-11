@@ -242,7 +242,7 @@ do
 	--[[@
 		@name await_many
 		@desc Awaits many awaitables at once. Runs them concurrently, and requires a FutureSemaphore object to do so.
-		@param ...<Future,Task> The awaitables to wait
+		@param vararg<Future,Task> The awaitables to wait
 		@returns FutureSemaphore The FutureSemaphore that will result once every awaitable is done.
 	]]
 	function EventLoop:await_many(...)
@@ -508,7 +508,7 @@ end
 	@name MixedEventLoop
 	@desc Creates a new object which is a mix of any EventLoop's variants.
 	@param eventloop<table> The table to turn into the mix
-	@param ...<EventLoop> The classes to mix
+	@param vararg<EventLoop> The classes to mix
 	@returns EventLoop The mixed event loop.
 ]]
 local function MixedEventLoop(eventloop, ...)
