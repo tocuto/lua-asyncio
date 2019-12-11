@@ -194,6 +194,8 @@ do
 				self.step = 0
 			end
 		end
+
+		self.used = self.used + time() - start
 	end
 end
 
