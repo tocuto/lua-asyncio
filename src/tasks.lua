@@ -12,6 +12,8 @@ do
 	--[[@
 		@name new
 		@desc Creates a new instance of Task: a function that can be run by an EventLoop
+		@desc If you await a Task, it will return the raw function returned values.
+		@desc /!\ If you safely await it, it might return nil, and you need to check its error manually.
 		@param fnc<function> The function that the task will execute. It can have special EventLoop calls like await, sleep, call_soon...
 		@param args<table> A table (with no associative members) to set as the arguments. Can have multiple items.
 		@param obj?<table> The table to turn into a Task.
@@ -20,7 +22,11 @@ do
 			arguments = {}, -- The arguments to give the function the next time Task:run is executed.
 			coro = coroutine_function, -- The coroutine wrapping the task function.
 			futures = {}, -- A list of futures to set the result after the task is done.
-			futures_index = 0 -- The futures list pointer
+			futures_index = 0, -- The futures list pointer
+			stop_error_propagation = false, -- Whether to stop the error propagation or not
+			error = false or string, -- The error, if any
+			done = false, -- Whether the task is done or not
+			cancelled = false, -- Whether the task is cancelled or not
 		}
 	]]
 	function Task.new(fnc, args, obj)
@@ -50,15 +56,14 @@ do
 			if status(self.coro) == "dead" then
 				self.done = true
 				if data[1] then
-					local length = #self.futures
-					if length > 0 or self._next_task then
+					if self.futures_index > 0 or self._next_task then
 						remove(data, 1)
 					else
 						return
 					end
 
 					local future
-					for index = 1, length do
+					for index = 1, self.futures_index do
 						future = self.futures[index]
 						future.obj:set_result(data, future.index)
 					end
@@ -69,7 +74,7 @@ do
 						loop:add_task(self._next_task)
 					end
 				else
-					error(data[2])
+					self.error = data[2]
 				end
 			end
 		end

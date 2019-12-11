@@ -141,17 +141,21 @@ do
 	--[[@
 		@name await
 		@desc Awaits a Future or Task to complete. Pauses the current task and resumes it again once the awaitable is done.
-		@param aw<Future|Task> The awaitable to wait.
+		@param aw<Future,Task> The awaitable to wait.
 		@returns mixed The Future or Task return values.
 	]]
 	function EventLoop:await(aw)
+		if aw.cancelled or aw.done then
+			error("Can't await a cancelled or done awaitable.", 2)
+		end
+
 		if aw._is_future then
 			-- if it is a future object it can't be appended to the task list _yet_
 			aw._next_tasks_index = aw._next_tasks_index + 1
 			aw._next_tasks[aw._next_tasks_index] = self.current_task
 		else
-			if aw.cancelled or aw.done then
-				error("Can't await a cancelled or done task.", 2)
+			if aw._next_task then
+				error("Can't re-use a task. Use Futures instead.", 2)
 			end
 
 			aw.paused = false
@@ -159,6 +163,17 @@ do
 			self:add_task(aw)
 		end
 		return self:stop_task_execution()
+	end
+
+	--[[@
+		@name await_safe
+		@desc Awaits a Future or Task to complete, but safely. Returns nil if an error happened.
+		@param aw<Future,Task> The awaitable to wait.
+		@returns mixed The awaitable return values, or nil if it had an error.
+	]]
+	function EventLoop:await_safe(aw)
+		self.current_task.stop_error_propagation = true
+		return self:await(aw)
 	end
 
 	--[[@
@@ -192,27 +207,78 @@ do
 	end
 
 	--[[@
+		@name handle_error
+		@desc Handles a task error and calls EventLoop:remove_later
+		@param task<Task> The task
+		@param index<int> The task index in the list, to be removed later.
+	]]
+	function EventLoop:handle_error(task, index)
+		self:remove_later(index)
+
+		task.done = true
+		if task.cancelled then
+			task.error = "The task was cancelled."
+		end
+
+		local future
+		for index = 1, task.futures_index do
+			future = task.futures[index]
+			future.obj:set_error(task.error, future.index, true)
+		end
+
+		if task._next_task then
+			local _next = task._next_task
+
+			if _next.stop_error_propagation then
+				_next.arguments = nil
+			else
+				_next.error = task.error
+				_next.done = true
+			end
+
+			self:add_task(_next)
+		else
+			error(task.error)
+		end
+	end
+
+	--[[@
+		@name remove_later
+		@desc Schedules a task removal
+		@param index<int> The task to remove
+	]]
+	function EventLoop:remove_later(index)
+		self.removed_index = self.removed_index + 1
+		self.removed[self.removed_index] = index
+	end
+
+	--[[@
 		@name run_tasks
 		@desc Runs the tasks in the list only.
 	]]
 	function EventLoop:run_tasks()
-		local tasks, now, removed, task = self.tasks, time(), self.removed
+		local tasks, now, task = self.tasks, time()
 
 		for index = 1, self.tasks_index do
 			task = tasks[index]
 
 			if not task.cancelled then
-				self.current_task = task
-				task:run(self)
+				if task.error then
+					self:handle_error(task, index)
 
-				if task.cancelled or task.paused or task.done then
-					task.paused = false
-					self.removed_index = self.removed_index + 1
-					removed[self.removed_index] = index
+				else
+					self.current_task = task
+					task:run(self)
+
+					if task.cancelled or task.error then
+						self:handle_error(task, index)
+					elseif task.done or task.paused then
+						task.paused = false
+						self:remove_later(index)
+					end
 				end
 			else
-				self.removed_index = self.removed_index + 1
-				removed[self.removed_index] = index
+				self:handle_error(task, index)
 			end
 		end
 
@@ -301,7 +367,7 @@ do
 		@name new
 		@desc Creates a new instance of LimitedEventLoop: the same as EventLoop but with runtime limitations
 		@desc This inherits from EventLoop
-		@param obj<table or nil> The table to turn into an EventLoop.
+		@param obj<table,nil> The table to turn into an EventLoop.
 		@param runtime<int> The maximum runtime that can be used.
 		@param reset<int> How many time it needs to wait until the used runtime is resetted.
 		@returns LimitedEventLoop The LimitedEventLoop.
