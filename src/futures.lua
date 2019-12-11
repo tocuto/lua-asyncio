@@ -16,6 +16,8 @@ do
 			loop = EventLoop, -- the loop that the future belongs to
 			_next_tasks = {}, -- the tasks that the Future is gonna run once it is done
 			_next_tasks_index = 0, -- the tasks table pointer
+			futures = {}, -- the futures to trigger after this is done
+			futures_index = 0, -- the futures pointer
 			result = nil or table, -- the Future result; if it is nil, it didn't end yet.
 			error = false or string, -- whether the future has thrown an error or not
 			cancelled = false, -- whether the future is cancelled or not
@@ -28,6 +30,8 @@ do
 		obj.loop = loop
 		obj._next_tasks = {}
 		obj._next_tasks_index = 0
+		obj.futures = {}
+		obj.futures_index = 0
 		return setmetatable(obj, meta)
 	end
 
@@ -37,6 +41,17 @@ do
 	]]
 	function Future:cancel()
 		self.cancelled = true
+	end
+
+	--[[@
+		@name add_future
+		@desc Adds a future that will be set after this one is done.
+		@param future<Future> The future object. Can be a variant too.
+		@param index?<int> The index given to the future object (used only with FutureSemaphore)
+	]]
+	function Future:add_future(future, index)
+		self.futures_index = self.futures_index + 1
+		self.futures[self.futures_index] = {obj=future, index=index}
 	end
 
 	--[[@

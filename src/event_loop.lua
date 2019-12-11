@@ -194,7 +194,7 @@ do
 			self:add_task(task)
 		end
 
-		return self:await(semaphore)
+		return semaphore
 	end
 
 	--[[@
