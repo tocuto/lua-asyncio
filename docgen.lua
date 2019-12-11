@@ -361,7 +361,7 @@ for f = 1, #_TREE do
 	fileDescData[counter] = data[1] .. ((_TREE[f].d and _TREE[f].d.short) and (" → " .. _TREE[f].d.short) or "")
 
 	for l = 1, #_TREE[f].v do
-		data[l + 1] = "\t- [" .. _TREE[f].v[l].k .. "](" .. _TREE[f].k .. ".md#" .. _TREE[f].v[l].v .. ")"
+		data[l + 1] = "\t- [" .. _TREE[f].v[l].k .. "](" .. _TREE[f].k .. ".md#" .. string.gsub(_TREE[f].v[l].v, ":", "") .. ")"
 	end
 	_TREE[f] = table.concat(data, "\n")
 end
