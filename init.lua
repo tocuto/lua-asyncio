@@ -8,5 +8,6 @@ return {
 	futures = futures,
 	Task = tasks.Task,
 	async = tasks.async,
-	TimerList = timers.TimerList
+	TimerList = timers.TimerList,
+	get_event_loop = loops.get_event_loop
 }
