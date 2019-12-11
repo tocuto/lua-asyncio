@@ -21,8 +21,12 @@ do
 	--[[@
 		@name add
 		@desc Adds a timer to the list.
-		@desc timer is be a table with `callback` and `when` parameters. `callback` will receive the table itself when called.
+		@desc `timer.callback` will receive the timer as the unique argument, so you can add more values here
 		@param timer<Timer> The timer to add.
+		@paramstruct timer {
+			callback<function> The callback function.
+			when<int> When it will be executed.
+		}
 	]]
 	function TimerList:add(timer)
 		if not self.last then

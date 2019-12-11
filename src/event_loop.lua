@@ -39,7 +39,12 @@ do
 	--[[@
 		@name timers_callback
 		@desc This function is called when a timer executes. It adds the timer task to the EventLoop.
-		@params callback<Timer> The timer that is being executed
+		@desc This function doesn't use all the Timer arguments. Passsing the ones listed here is enough.
+		@desc /!\ This function shouldn't be called by the user code, it should be called by timers only.
+		@param callback<Timer> The timer that is being executed
+		@paramstruct callback {
+			task<Task> The task to execute.
+		}
 	]]
 	function EventLoop.timers_callback(callback)
 		return callback.event_loop:add_task(callback.task)
@@ -48,7 +53,12 @@ do
 	--[[@
 		@name cancel_awaitable
 		@desc This function is called when an awaitable times out.
-		@params callback<Timer> The timer that is being executed
+		@desc This function doesn't use all the Timer arguments. Passsing the ones listed here is enough.
+		@desc /!\ This function shouldn't be called by the user code, it should be called by timers only.
+		@param callback<Timer> The timer that is being executed
+		@paramstruct callback {
+			awaitable<Future,Task> The awaitable to cancel.
+		}
 	]]
 	function EventLoop.cancel_awaitable(callback)
 		if not callback.awaitable.done then
@@ -71,7 +81,7 @@ do
 		@desc This function appends the given task to the EventLoop list after some time.
 		@param delay<number> The time to wait until the task can be appended
 		@param task<Task> The task to append
-		@param no_future?<boolean> Either to cancel the creation or not a Future object that will return after the task ends. Defaults to false.
+		@param no_future?<boolean> Either to cancel the creation or not a Future object that will return after the task ends. @default false.
 		@returns Future Returns the Future object if no_future is false.
 	]]
 	function EventLoop:call_soon(delay, task, no_future)
@@ -93,7 +103,7 @@ do
 		@desc The same as EventLoop:call_soon, but with an absolute time.
 		@param when<number> The time when the task can be appended
 		@param task<Task> The task to append
-		@param no_future?<boolean> Either to cancel the creation or not a Future object that will return after the task ends. Defaults to false.
+		@param no_future?<boolean> Either to cancel the creation or not a Future object that will return after the task ends. @default false.
 		@returns Future Returns the Future object if no_future is false.
 	]]
 	function EventLoop:schedule(when, task, no_future)

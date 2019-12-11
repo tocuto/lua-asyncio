@@ -107,7 +107,7 @@ end
 --[[@
 	@name async
 	@desc A decorator function that will create a new task object with the function passed it everytime it is called.
-	@params fnc<function> The function
+	@param fnc<function> The function
 	@returns function The wrapper.
 ]]
 local function async(fnc)

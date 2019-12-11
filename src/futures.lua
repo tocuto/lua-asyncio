@@ -58,7 +58,7 @@ do
 		@name set_result
 		@desc Sets the Future result and calls all the scheduled tasks
 		@param result<table> A table (with no associative members) to set as the result. Can have multiple items.
-		@param safe?<boolean> Whether to cancel the error if the result can't be set. Defaults to false.
+		@param safe?<boolean> Whether to cancel the error if the result can't be set. @default false.
 	]]
 	function Future:set_result(result, safe)
 		if self.done then
@@ -93,7 +93,7 @@ do
 		@name set_error
 		@desc Sets the Future error and calls all the scheduled tasks
 		@param result<string> A string to set as the error message.
-		@param safe?<boolean> Whether to cancel the error if the result can't be set. Defaults to false.
+		@param safe?<boolean> Whether to cancel the error if the result can't be set. @default false.
 	]]
 	function Future:set_error(result, index, safe)
 		if self.done then
@@ -223,7 +223,7 @@ do
 		@desc Sets a FutureSemaphore error and calls all the scheduled tasks if it is completely done
 		@param result<string> A string to set as the error message.
 		@param index<number> The index of the result. Can't be repeated.
-		@param safe?<boolean> Whether to cancel the error if the result can't be set. Defaults to false.
+		@param safe?<boolean> Whether to cancel the error if the result can't be set. @default false.
 	]]
 	FutureSemaphore.set_error = FutureSemaphore.set_result
 	-- The behaviour is the same on this future variation
