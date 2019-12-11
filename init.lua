@@ -4,7 +4,7 @@ local tasks = require "tasks"
 local timers = require "timer_list"
 
 return {
-	loops = loop,
+	loops = loops,
 	futures = futures,
 	Task = tasks.Task,
 	async = tasks.async,
