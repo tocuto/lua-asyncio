@@ -260,7 +260,7 @@ do
 		local future
 		for index = 1, task.futures_index do
 			future = task.futures[index]
-			future.obj:set_error(task.error, future.index, true)
+			future.obj:set_error(task.error, true, future.index)
 		end
 
 		if task._next_task then
