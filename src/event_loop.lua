@@ -46,6 +46,17 @@ do
 	end
 
 	--[[@
+		@name cancel_awaitable
+		@desc This function is called when an awaitable times out.
+		@params callback<Timer> The timer that is being executed
+	]]
+	function EventLoop.cancel_awaitable(callback)
+		if not callback.awaitable.done then
+			callback.awaitable:cancel()
+		end
+	end
+
+	--[[@
 		@name sleep
 		@desc This function pauses the current task execution and resumes it after some time.
 		@param delay<number> The time to sleep
@@ -175,6 +186,31 @@ do
 	function EventLoop:await_safe(aw)
 		self.current_task.stop_error_propagation = true
 		return self:await(aw)
+	end
+
+	--[[@
+		@name add_timeout
+		@desc Adds a timeout for an awaitable. Basically it cancels the awaitable once the timeout is reached.
+		@param aw<Future,Task> The awaitable to wait.
+	]]
+	function EventLoop:add_timeout(aw, timeout)
+		self.timers:add {
+			callback = self.cancel_awaitable,
+			when = time() + timeout,
+			awaitable = aw
+		}
+	end
+
+	--[[@
+		@name await_for
+		@desc A shorthand method for add_timeout and await_safe.
+		@param aw<Future,Task> The awaitable to wait
+		@param timeout<number> The timeout
+		@returns mixed The Future or Task return values.
+	]]
+	function EventLoop:await_for(aw, timeout)
+		self:add_timeout(aw, timeout)
+		return self:await_safe(aw)
 	end
 
 	--[[@
