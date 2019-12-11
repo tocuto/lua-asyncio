@@ -5,14 +5,31 @@ do
 	TimerList = {}
 	local meta = {__index = TimerList}
 
+	--[[@
+		@name new
+		@desc Creates a new instance of TimerList.
+		@param obj?<table> The table to turn into a TimerList.
+		@returns TimerList The new TimerList object.
+		@struct {
+			last = Timer -- the last timer (the one that must trigger before all the others). Might be nil.
+		}
+	]]
 	function TimerList.new(obj)
 		return setmetatable(obj or {}, meta)
 	end
 
+	--[[@
+		@name add
+		@desc Adds a timer to the list.
+		@desc timer is be a table with `callback` and `when` parameters. `callback` will receive the table itself when called.
+		@param timer<Timer> The timer to add.
+	]]
 	function TimerList:add(timer)
 		if not self.last then
 			self.last = timer
 		elseif self.last.when < timer.when then
+			-- sorts the timer in descendent order
+
 			local current, last = self.last.previous, self.last
 			while current and current.when < timer.when do
 				current, last = current.previous, current
@@ -25,6 +42,10 @@ do
 		end
 	end
 
+	--[[@
+		@name run
+		@desc Runs the timers that need to be run.
+	]]
 	function TimerList:run()
 		local now, current = time(), self.last
 		while current and current.when <= now do
