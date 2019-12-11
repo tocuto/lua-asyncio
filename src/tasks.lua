@@ -39,6 +39,17 @@ do
 	end
 
 	--[[@
+		@name cancel
+		@desc Cancels the task, and if it is awaiting something, cancels the awaiting object too.
+	]]
+	function Task:cancel()
+		if self.awaiting then
+			self.awaiting:cancel()
+		end
+		self.cancelled = true
+	end
+
+	--[[@
 		@name run
 		@desc Runs the task function
 		@param loop<EventLoop> The loop that will run this part of the task
@@ -70,6 +81,7 @@ do
 
 					if self._next_task then
 						self._next_task.arguments = data
+						self._next_task.awaiting = nil
 
 						loop:add_task(self._next_task)
 					end
@@ -83,7 +95,7 @@ do
 	--[[@
 		@name add_future
 		@desc Adds a future that will be set after the task runs.
-		@param future<Future> The future object. Can be a FutureSemaphore too.
+		@param future<Future> The future object. Can be a variant too.
 		@param index?<int> The index given to the future object (used only with FutureSemaphore)
 	]]
 	function Task:add_future(future, index)

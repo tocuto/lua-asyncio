@@ -162,6 +162,7 @@ do
 			aw._next_task = self.current_task
 			self:add_task(aw)
 		end
+		self.current_task.awaiting = aw
 		return self:stop_task_execution()
 	end
 
@@ -178,9 +179,9 @@ do
 
 	--[[@
 		@name await_many
-		@desc Awaits many Tasks at once. Runs them concurrently, and requires a FutureSemaphore object to do so.
-		@param ...<Tasks> The Tasks to await
-		@returns table The table with all the Task returned values. Every index is in order and every index is a sub-table with the returned values.
+		@desc Awaits many awaitables at once. Runs them concurrently, and requires a FutureSemaphore object to do so.
+		@param ...<Future,Task> The awaitables to wait
+		@returns FutureSemaphore The FutureSemaphore that will result once every awaitable is done.
 	]]
 	function EventLoop:await_many(...)
 		local length = select("#", ...)

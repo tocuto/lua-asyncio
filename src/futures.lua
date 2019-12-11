@@ -6,6 +6,8 @@ do
 	--[[@
 		@name new
 		@desc Creates a new instance of Future: an object that will return later. You can use EventLoop:await on it, but you can't use EventLoop:add_task.
+		@desc If you await it, it will return the :set_result() unpacked table. If you set the result to {"a", "b", "c"}, it will return "a", "b", "c".
+		@desc /!\ If you safely await it, it will return nil and you need to manually check its error.
 		@param loop<EventLoop> The loop that the future belongs to
 		@param obj?<table> The table to turn into a Future.
 		@returns Future The Future object
@@ -15,6 +17,7 @@ do
 			_next_tasks = {}, -- the tasks that the Future is gonna run once it is done
 			_next_tasks_index = 0, -- the tasks table pointer
 			result = nil or table, -- the Future result; if it is nil, it didn't end yet.
+			error = false or string, -- whether the future has thrown an error or not
 			cancelled = false, -- whether the future is cancelled or not
 			done = false -- whether the future is done or not
 		}
@@ -26,6 +29,14 @@ do
 		obj._next_tasks = {}
 		obj._next_tasks_index = 0
 		return setmetatable(obj, meta)
+	end
+
+	--[[@
+		@name cancel
+		@desc Cancels the Future
+	]]
+	function Future:cancel()
+		self.cancelled = true
 	end
 
 	--[[@
