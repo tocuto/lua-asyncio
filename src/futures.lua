@@ -26,23 +26,23 @@ end
 
 local FutureSemaphore
 do
-	FutureSemaphore = {}
+	FutureSemaphore = setmetatable(
+		{}, {__index=Future}
+	)
 	local meta = {__index = FutureSemaphore}
 
 	function FutureSemaphore.new(loop, quantity, obj)
-		obj = obj or {}
-		obj._is_future = true
-		obj.loop = loop
+		obj = Future(loop, obj)
 		obj.quantity = quantity
-		obj.result = {}
-		obj._next_tasks = {}
-		obj._next_tasks_index = 0
 		obj.done = 0
 		return setmetatable(obj, meta)
 	end
 
 	function FutureSemaphore:set_result(result, index)
-		if not self.result[index] then
+		if not self.result then
+			self.result = {[index] = result}
+			self.done = 1
+		elseif not self.result[index] then
 			self.result[index] = result
 			self.done = self.done + 1
 		else
