@@ -229,4 +229,7 @@ do
 	-- The behaviour is the same on this future variation
 end
 
-return Future, FutureSemaphore
+return {
+	Future = Future,
+	FutureSemaphore = FutureSemaphore
+}

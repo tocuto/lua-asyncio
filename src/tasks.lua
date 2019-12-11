@@ -116,4 +116,7 @@ local function async(fnc)
 	end
 end
 
-return Task, async
+return {
+	Task = Task,
+	async = async
+}

@@ -1,6 +1,8 @@
-local TimerList = require "timer_list"
-local Future, FutureSemaphore = require "futures"
-local Task, async = require "tasks"
+local timers = require "timer_list"
+local futures = require "futures"
+
+local TimerList = timers.TimerList
+local Future, FutureSemaphore = futures.Future, futures.FutureSemaphore
 
 local EventLoop
 do
@@ -527,10 +529,4 @@ return {
 	OrderedEventLoop = OrderedEventLoop,
 	LimitedEventLoop = LimitedEventLoop,
 	MixedEventLoop = MixedEventLoop
-	Task = Task,
-	TimerList = TimerList,
-	Future = Future,
-	FutureSemaphore = FutureSemaphore,
-
-	async = async
 }

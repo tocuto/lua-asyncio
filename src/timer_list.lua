@@ -60,4 +60,6 @@ do
 	end
 end
 
-return TimerList
+return {
+	TimerList = TimerList
+}
