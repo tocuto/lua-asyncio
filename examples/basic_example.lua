@@ -1,4 +1,4 @@
-local asyncio = require "asyncio"
+local asyncio = require "lua-asyncio"
 local async = asyncio.async
 
 -- You can use any of the EventLoop variants!

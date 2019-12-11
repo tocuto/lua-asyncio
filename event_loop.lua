@@ -1,5 +1,5 @@
-local timers = require "timer_list"
-local futures = require "futures"
+local timers = require "lua-asyncio/timer_list"
+local futures = require "lua-asyncio/futures"
 
 local TimerList = timers.TimerList
 local Future, FutureSemaphore = futures.Future, futures.FutureSemaphore

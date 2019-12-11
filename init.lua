@@ -1,7 +1,7 @@
-local loops = require "event_loop"
-local futures = require "futures"
-local tasks = require "tasks"
-local timers = require "timer_list"
+local loops = require "lua-asyncio/event_loop"
+local futures = require "lua-asyncio/futures"
+local tasks = require "lua-asyncio/tasks"
+local timers = require "lua-asyncio/timer_list"
 
 return {
 	loops = loops,
