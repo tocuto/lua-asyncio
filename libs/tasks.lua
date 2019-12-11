@@ -63,6 +63,10 @@ do
 			data = {resume(self.coro)}
 		end
 
+		while data[2] == "get_event_loop" do
+			data = {resume(self.coro, loop)}
+		end
+
 		if not self.cancelled then
 			if status(self.coro) == "dead" then
 				self.done = true

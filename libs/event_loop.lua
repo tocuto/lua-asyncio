@@ -4,6 +4,20 @@ local futures = require "futures"
 local TimerList = timers.TimerList
 local Future, FutureSemaphore = futures.Future, futures.FutureSemaphore
 
+local get_event_loop
+do
+	local yield = coroutine.yield
+
+	--[[@
+		@name get_event_loop
+		@desc Returns the event loop where the task is running on
+		@returns EventLoop The EventLoop.
+	]]
+	function get_event_loop()
+		return yield("get_event_loop")
+	end
+end
+
 local EventLoop
 do
 	local time = os.time
@@ -389,7 +403,7 @@ do
 		@name remove_tasks
 		@desc Removes the tasks that are waiting to be removed from the list.
 	]]
-	function EventLoop:remove_tasks()
+	function OrderedEventLoop:remove_tasks()
 		local tasks, removed, remove = self.tasks, self.removed
 		for index = self.removed_index, 1, -1 do
 			remove = removed[index]
@@ -528,5 +542,6 @@ return {
 	EventLoop = EventLoop,
 	OrderedEventLoop = OrderedEventLoop,
 	LimitedEventLoop = LimitedEventLoop,
-	MixedEventLoop = MixedEventLoop
+	MixedEventLoop = MixedEventLoop,
+	get_event_loop = get_event_loop
 }
