@@ -43,21 +43,75 @@ do
 		@name set_result
 		@desc Sets the Future result and calls all the scheduled tasks
 		@param result<table> A table (with no associative members) to set as the result. Can have multiple items.
+		@param safe?<boolean> Whether to cancel the error if the result can't be set. Defaults to false.
 	]]
-	function Future:set_result(result)
+	function Future:set_result(result, safe)
 		if self.done then
-			error("The Future has already been done.", 2)
+			local msg = "The Future has already been done."
+			if safe then return msg
+			else error(msg, 2) end
 		elseif self.cancelled then
-			error("The Future was cancelled.", 2)
+			local msg = "The Future was cancelled."
+			if safe then return msg
+			else error(msg, 2) end
 		end
 
 		self.done = true
 		self.result = result
 
+		local future
+		for index = 1, self.futures_index do
+			future = self.futures[index]
+			future.obj:set_result(result, true, future.index)
+		end
+
 		local task
 		for index = 1, self._next_tasks_index do
 			task = self._next_tasks[index]
 			task.arguments = result
+			task.awaiting = nil
+			self.loop:add_task(task)
+		end
+	end
+
+	--[[@
+		@name set_error
+		@desc Sets the Future error and calls all the scheduled tasks
+		@param result<string> A string to set as the error message.
+		@param safe?<boolean> Whether to cancel the error if the result can't be set. Defaults to false.
+	]]
+	function Future:set_error(result, index, safe)
+		if self.done then
+			local msg = "The Future has already been done."
+			if safe then return msg
+			else error(msg, 2) end
+		elseif self.cancelled then
+			local msg = "The Future was cancelled."
+			if safe then return msg
+			else error(msg, 2) end
+		end
+
+		self.error = result
+		self.done = true
+
+		local future
+		for index = 1, self.futures_index do
+			future = self.futures[index]
+			future.obj:set_error(result, true, future.index)
+		end
+
+		local task
+		for index = 1, self._next_tasks_index do
+			task = self._next_tasks[index]
+
+			if task.stop_error_propagation then
+				task.arguments = nil
+			else
+				task.error = result
+				task.done = true
+			end
+
+			task.awaiting = nil
 			self.loop:add_task(task)
 		end
 	end
@@ -74,6 +128,8 @@ do
 		@name new
 		@desc Creates a new instance of FutureSemaphore: an object that will return many times later. This inherits from Future.
 		@desc You can use EventLoop:await on it, but you can't use add_task.
+		@desc If you await it, it will return a table where you can get all the appended values with their respective indexes.
+		@desc /!\ FutureSemaphore will never propagate an error, instead, it will append it to the result as a string.
 		@param loop<EventLoop> The loop that the future belongs to
 		@param quantity<int> The quantity of values that the object will return.
 		@param obj?<table> The table to turn into a FutureSemaphore.
@@ -102,36 +158,60 @@ do
 
 	--[[@
 		@name set_result
-		@desc Sets the Future result and calls all the scheduled tasks
+		@desc Sets a FutureSemaphore result and calls all the scheduled tasks if it is completely done
 		@param result<table> A table (with no associative members) to set as the result. Can have multiple items.
+		@param safe<boolean> Whether to cancel the error if the result can't be set.
 		@param index<number> The index of the result. Can't be repeated.
 	]]
-	function FutureSemaphore:set_result(result, index)
+	function FutureSemaphore:set_result(result, safe, index)
 		if self.done then
-			error("The FutureSemaphore has already been done.", 2)
+			local msg = "The FutureSemaphore has already been done."
+			if safe then return msg
+			else error(msg, 2) end
 		elseif self.cancelled then
-			error("The FutureSemaphore was cancelled.", 2)
+			local msg = "The FutureSemaphore was cancelled."
+			if safe then return msg
+			else error(msg, 2) end
 		end
 
 		if not self._result[index] then
 			self._result[index] = result
 			self._done = self._done + 1
 		else
-			error("The given semaphore spot is already taken.", 2)
+			local msg = "The given semaphore spot is already taken."
+			if safe then return msg
+			else error(msg, 2) end
 		end
 
 		if self._done == self.quantity then
 			self.done = true
 			self.result = self._result
 
+			local future
+			for index = 1, self.futures_index do
+				future = self.futures[index]
+				future.obj:set_result(self.result, true, future.index)
+			end
+
 			local task_result, task = {self.result}
 			for _index = 1, self._next_tasks_index do
 				task = self._next_tasks[_index]
 				task.arguments = task_result
+				task.awaiting = nil
 				self.loop:add_task(task)
 			end
 		end
 	end
+
+	--[[@
+		@name set_error
+		@desc Sets a FutureSemaphore error and calls all the scheduled tasks if it is completely done
+		@param result<string> A string to set as the error message.
+		@param index<number> The index of the result. Can't be repeated.
+		@param safe?<boolean> Whether to cancel the error if the result can't be set. Defaults to false.
+	]]
+	FutureSemaphore.set_error = FutureSemaphore.set_result
+	-- The behaviour is the same on this future variation
 end
 
 return Future, FutureSemaphore

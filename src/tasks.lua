@@ -76,7 +76,7 @@ do
 					local future
 					for index = 1, self.futures_index do
 						future = self.futures[index]
-						future.obj:set_result(data, future.index)
+						future.obj:set_result(data, true, future.index)
 					end
 
 					if self._next_task then
