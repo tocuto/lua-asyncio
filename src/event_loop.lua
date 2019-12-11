@@ -13,9 +13,9 @@ do
 	--[[@
 		@name new
 		@desc Creates a new instance of EventLoop: an object that runs tasks concurrently (pseudo-paralellism)
-		@desc /!\ EventLoop.tasks_index might be lower than the quantity of items in the EventLoop.tasks list.
-		@desc /!\ EventLoop.removed_index might be lower than the quantity of items in the EventLoop.removed list.
-		@desc /!\ The tasks might run in a different order than the one the acquire once you run EventLoop:add_task
+		@desc /!\ EventLoop.tasks_index might be lower than the quantity of items in the EventLoop.tasks list. You must trust tasks_index.
+		@desc /!\ EventLoop.removed_index might be lower than the quantity of items in the EventLoop.removed list. You must trust removed_index.
+		@desc /!\ The tasks might run in a different order than the one they acquire once you run EventLoop:add_task
 		@param obj?<table> The table to turn into an EventLoop.
 		@returns EventLoop The EventLoop.
 		@struct {
@@ -230,13 +230,61 @@ do
 
 			if remove < self.tasks_index then
 				tasks[remove] = tasks[self.tasks_index]
-				-- tasks[self.tasks_index] = nil
+				-- tasks[self.tasks_index] = nil -- uncomment if you want to make #self.tasks and self.tasks_index match
+				-- Remember that uncommenting the line won't make the loop respect the tasks order. Use OrderedEventLoop for that.
 			end
 
 			self.tasks_index = self.tasks_index - 1
 		end
 
 		self.removed_index = 0
+	end
+end
+
+local OrderedEventLoop
+do
+	local remove = table.remove
+
+	OrderedEventLoop = setmetatable(
+		{}, {__index = EventLoop}
+	)
+	local meta = {__index = OrderedEventLoop}
+
+	--[[@
+		@name new
+		@desc Creates a new instance of OrderedEventLoop: the same as EventLoop but respecting the tasks order.
+		@desc /!\ This is different from EventLoop since here, tasks_index and the quantity of items of tasks match.
+		@desc /!\ EventLoop.removed_index might be lower than the quantity of items in the EventLoop.removed list. You must trust removed_index.
+		@desc /!\ The tasks orders is the one they acquire once you run OrderedEventLoop:add_task.
+		@param obj?<table> The table to turn into an EventLoop.
+		@returns OrderedEventLoop The OrderedEventLoop.
+		@struct {
+			timers = TimerList, -- A list of the timers the EventLoop will handle
+			tasks = {}, -- The list of tasks the EventLoop is running
+			removed = {}, -- The list of indexes in the tasks list to remove
+			tasks_index = 0, -- The tasks list pointer
+			removed_index = 0 -- The removed list pointer
+		}
+	]]
+	function OrderedEventLoop.new(obj)
+		return setmetatable(EventLoop.new(obj), meta)
+	end
+
+	--[[@
+		@name remove_tasks
+		@desc Removes the tasks that are waiting to be removed from the list.
+	]]
+	function EventLoop:remove_tasks()
+		local tasks, removed, remove = self.tasks, self.removed
+		for index = self.removed_index, 1, -1 do
+			remove = removed[index]
+
+			remove(tasks, index)
+			self.tasks_index = self.tasks_index - 1
+		end
+
+		self.removed_index = 0
+		-- self.removed = {} -- uncomment if you want to make #self.removed and self.removed_index always match
 	end
 end
 
@@ -253,9 +301,9 @@ do
 		@name new
 		@desc Creates a new instance of LimitedEventLoop: the same as EventLoop but with runtime limitations
 		@desc This inherits from EventLoop
+		@param obj<table or nil> The table to turn into an EventLoop.
 		@param runtime<int> The maximum runtime that can be used.
 		@param reset<int> How many time it needs to wait until the used runtime is resetted.
-		@param obj?<table> The table to turn into an EventLoop.
 		@returns LimitedEventLoop The LimitedEventLoop.
 		@struct {
 			timers = TimerList, -- A list of the timers the EventLoop will handle
@@ -270,7 +318,7 @@ do
 			step = 0 -- The iteration step (0 -> needs to run timers, 1 -> needs to run tasks, 2 -> needs to remove tasks)
 		}
 	]]
-	function LimitedEventLoop.new(runtime, reset, obj)
+	function LimitedEventLoop.new(obj, runtime, reset)
 		obj = EventLoop.new(obj)
 		obj.runtime = runtime
 		obj.reset = reset
@@ -327,9 +375,45 @@ do
 	end
 end
 
+--[[@
+	@name MixedEventLoop
+	@desc Creates a new object which is a mix of any EventLoop's variants.
+	@param eventloop<table> The table to turn into the mix
+	@param ...<EventLoop> The classes to mix
+	@returns EventLoop The mixed event loop.
+]]
+local function MixedEventLoop(eventloop, ...)
+	local classes = {...}
+	local length = #classes
+
+	setmetatable(eventloop, {
+		__index = function(tbl, key)
+			local v
+			for i = 1, length do
+				v = classes[i][key]
+				if v then return v end
+			end
+		end
+	})
+	local meta = {__index = eventloop}
+
+	function eventloop.new(obj)
+		local obj = obj or {}
+		for i = 1, length do
+			obj = classes[i].new(obj)
+		end
+
+		return setmetatable(obj, meta)
+	end
+
+	return eventloop
+end
+
 return {
 	EventLoop = EventLoop,
+	OrderedEventLoop = OrderedEventLoop,
 	LimitedEventLoop = LimitedEventLoop,
+	MixedEventLoop = MixedEventLoop
 	Task = Task,
 	TimerList = TimerList,
 	Future = Future,
