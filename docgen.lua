@@ -323,10 +323,10 @@ local toArr = function(tbl)
 end
 
 local list = {
-	"libs/event_loop.lua",
-	"libs/futures.lua",
-	"libs/tasks.lua",
-	"libs/timer_list.lua"
+	"event_loop.lua",
+	"futures.lua",
+	"tasks.lua",
+	"timer_list.lua"
 }
 for file = 1, #list do
 	local f = io.open(list[file], 'r')
