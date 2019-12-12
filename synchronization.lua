@@ -12,19 +12,21 @@ do
 	--[[@
 		@name new
 		@desc Creates a new instance of Event
-		@desc This is an object
+		@desc This is an object that notifies other tasks when it is set.
 		@param loop<EventLoop> The EventLoop that the Event belongs to.
 		@returns Event The Event object
 		@struct {
 			loop = loop, -- The EventLoop that the Event belongs to
-			future = loop:new_future(), -- A Future object
+			tasks = {}, -- The tasks that are waiting for the Event to be set
+			tasks_index = 0, -- The tasks list pointer
 			is_set = false -- Whether the event is set or not
 		}
 	]]
 	function Event.new(loop, obj)
 		obj = obj or {}
 		obj.loop = loop
-		obj.future = loop:new_future()
+		obj.tasks = {}
+		obj.tasks_index = 0
 		return setmetatable(obj, meta)
 	end
 
@@ -35,7 +37,10 @@ do
 	]]
 	Event.wait = async(function(self)
 		if self.is_set then return end
-		self.loop:await(self.future)
+
+		self.tasks_index = self.tasks_index + 1
+		self.tasks[self.tasks_index] = self.loop.current_task
+		self.loop:stop_task_execution()
 	end)
 
 	--[[@
@@ -45,7 +50,10 @@ do
 	function Event:set()
 		if self.is_set then return end
 		self.is_set = true
-		self.future:set_result({}, true)
+
+		for index = 1, self.tasks_index do
+			self.loop:add_task(self.tasks[index])
+		end
 	end
 
 	--[[@
@@ -55,6 +63,12 @@ do
 	function Event:clear()
 		if not self.is_set then return end
 		self.is_set = false
-		self.future = self.loop:new_future()
+
+		self.tasks_index = 0
+		self.tasks = {}
 	end
 end
+
+return {
+	Event = Event
+}
