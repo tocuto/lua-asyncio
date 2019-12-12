@@ -11,6 +11,7 @@ Thanks to [Lautenschlager-id](https://github.com/Lautenschlager-id) for letting 
 ## Examples
 
 You can check a basic example [here](examples/basic_example.lua) and the full list of examples [here](examples).
+If you're gonna use it on Transformice, you can check [this example](examples/transformice.lua).
 
 ## Documentation
 
