@@ -105,6 +105,7 @@ do
 			if safe then return msg
 			else error(msg, 2) end
 		end
+		result = debug.traceback(result, 2)
 
 		self.error = result
 		self.done = true
@@ -164,7 +165,7 @@ do
 		}
 	]]
 	function FutureSemaphore.new(loop, quantity, obj)
-		obj = Future(loop, obj)
+		obj = Future.new(loop, obj)
 		obj.quantity = quantity
 		obj._done = 0
 		obj._result = {}
@@ -226,6 +227,7 @@ do
 		@param index<number> The index of the result. Can't be repeated.
 	]]
 	function FutureSemaphore:set_error(result, safe, index)
+		result = debug.traceback(result, 2)
 		return self:set_result(result, safe, index)
 		-- The behaviour is the same on this future variation
 	end

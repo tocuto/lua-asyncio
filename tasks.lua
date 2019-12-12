@@ -97,7 +97,7 @@ do
 						loop:add_task(self._next_task)
 					end
 				else
-					self.error = data[2]
+					self.error = debug.traceback(self.coro, data[2])
 				end
 			end
 		end
