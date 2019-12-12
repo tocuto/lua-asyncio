@@ -27,6 +27,8 @@ do
 			error = false or string, -- The error, if any
 			done = false, -- Whether the task is done or not
 			cancelled = false, -- Whether the task is cancelled or not
+			timer = nil or Timer, -- nil if the task is not scheduled, a Timer object otherwise.
+			ran_once = false -- Whether the task did run (or at least partially run)
 		}
 	]]
 	function Task.new(fnc, args, obj)
@@ -43,7 +45,10 @@ do
 		@desc Cancels the task, and if it is awaiting something, cancels the awaiting object too.
 	]]
 	function Task:cancel()
-		if self.awaiting then
+		if self.timer then
+			self.timer.list:remove(self.timer)
+			self.timer.event_loop:add_task(self)
+		elseif self.awaiting then
 			self.awaiting:cancel()
 		end
 		self.cancelled = true
@@ -55,6 +60,8 @@ do
 		@param loop<EventLoop> The loop that will run this part of the task
 	]]
 	function Task:run(loop)
+		self.ran_once = true
+
 		local data
 		if self.arguments then
 			data = {resume(self.coro, unpack(self.arguments))}

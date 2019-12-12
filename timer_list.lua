@@ -30,6 +30,8 @@ do
 		@returns Timer The timer you've added
 	]]
 	function TimerList:add(timer)
+		timer.list = self
+
 		if not self.last then
 			self.last = timer
 		elseif self.last.when < timer.when then
