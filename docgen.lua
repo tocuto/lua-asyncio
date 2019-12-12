@@ -104,6 +104,10 @@ local generate = function(content, fileName)
 	-- Method / Function. Matches [x.]y = function(z)
 	string.gsub(content, '%-%-%[%[@\n(.-)%]%]\n\t*(.-)\n', function(data, object)
 		local objSrc, union, objName, objParam = string.match(object, "(%S+)([%:%.])(%S+).-%((.-)%)")
+		if objParam and string.find(objParam, "(", 1, true) then
+			objSrc, union, objName, objParam = string.match(object, "(%S+)([%:%.])(%S+).-async%(%s*function%((.-)%)")
+		end
+
 		if not objSrc then
 			objName, objParam = string.match(object, "(%S+)%s*%((.-)%)")
 		elseif objName and objSrc ~= '' and objSrc ~= "self" then
