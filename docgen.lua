@@ -330,7 +330,8 @@ local list = {
 	"event_loop.lua",
 	"futures.lua",
 	"tasks.lua",
-	"timer_list.lua"
+	"timer_list.lua",
+	"synchronization.lua"
 }
 for file = 1, #list do
 	local f = io.open(list[file], 'r')

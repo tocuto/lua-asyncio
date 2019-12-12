@@ -4,6 +4,7 @@
 
 - [Event_loop](Event_loop.md)
 - [Futures](Futures.md)
+- [Synchronization](Synchronization.md)
 - [Tasks](Tasks.md)
 - [Timer_list](Timer_list.md)
 
@@ -47,6 +48,11 @@
 	- [FutureSemaphore.new](Futures.md#futuresemaphorenew--loop-quantity-obj-)
 	- [FutureSemaphore:set_error](Futures.md#futuresemaphoreset_error--result-safe-index-)
 	- [FutureSemaphore:set_result](Futures.md#futuresemaphoreset_result--result-safe-index-)
+- [Synchronization](Synchronization.md)
+	- [Event.new](Synchronization.md#eventnew--loop-obj-)
+	- [Event.wait](Synchronization.md#eventwait--self-)
+	- [Event:clear](Synchronization.md#eventclear---)
+	- [Event:set](Synchronization.md#eventset---)
 - [Tasks](Tasks.md)
 	- [Task.new](Tasks.md#tasknew--fnc-args-obj-)
 	- [Task:add_future](Tasks.md#taskadd_future--future-index-)

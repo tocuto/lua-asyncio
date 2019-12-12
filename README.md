@@ -6,7 +6,7 @@ Thanks to [Lautenschlager-id](https://github.com/Lautenschlager-id) for letting 
 
 ## About
 
-[Python's Asyncio](https://docs.python.org/3.8.0/library/asyncio.html) is a library used to write concurrent code, and this library is a basic implementation of it.
+[Python's Asyncio](https://docs.python.org/3/library/asyncio.html) is a library used to write concurrent code, and this library is a basic implementation of it.
 
 ## Examples
 
