@@ -141,7 +141,7 @@ do
 		}
 
 		if not no_future then
-			local future = self:new_future()
+			local future = self:new_object(Future)
 			task:add_future(future)
 			return future
 		end
@@ -158,21 +158,14 @@ do
 	end
 
 	--[[@
-		@name new_future
-		@desc Creates a new Future object that belongs to this EventLoop
-		@returns Future The Future object
+		@name new_object
+		@desc Creates a new asyncio object that belongs to this EventLoop
+		@param object<Future,Lock,Event,Queue> The object class
+		@param vararg<mixed> The object arguments
+		@returns mixed The new object
 	]]
-	function EventLoop:new_future()
-		return Future.new(self)
-	end
-
-	--[[@
-		@name new_future_semaphore
-		@desc Creates a new FutureSemaphore object that belongs to this EventLoop
-		@returns FutureSemaphore The FutureSemaphore object
-	]]
-	function EventLoop:new_future_semaphore(quantity)
-		return FutureSemaphore.new(self, quantity)
+	function EventLoop:new_object(object, ...)
+		return object.new(self, ...)
 	end
 
 	--[[@
@@ -257,7 +250,7 @@ do
 	]]
 	function EventLoop:await_many(...)
 		local length = select("#", ...)
-		local semaphore = self:new_future_semaphore(length)
+		local semaphore = self:new_object(FutureSemaphore, length)
 
 		local task
 		for index = 1, length do
@@ -419,9 +412,9 @@ do
 		local tasks, removed = self.tasks, self.removed
 		for index = self.removed_index, 1, -1 do
 			remove(tasks, removed[index])
-			self.tasks_index = self.tasks_index - 1
 		end
 
+		self.tasks_index = self.tasks_index - self.removed_index
 		self.removed_index = 0
 		-- self.removed = {} -- uncomment if you want to make #self.removed and self.removed_index always match
 	end

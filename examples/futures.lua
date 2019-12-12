@@ -2,7 +2,7 @@ local asyncio = require "lua-asyncio"
 local async = asyncio.async
 
 local loop = asyncio.loops.EventLoop.new()
-local future = loop:new_future()
+local future = loop:new_object(asyncio.futures.Future)
 -- you might change the intervals depending on what your os.time() returns
 
 local long_task_1 = async(function()

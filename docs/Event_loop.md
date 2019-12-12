@@ -125,26 +125,19 @@
 >Adds a task to run on the next loop iteration.
 >
 ---
->### EventLoop:new_future (  )
+>### EventLoop:new_object ( object, ... )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| object | `Future`, `Lock`, `Event`, `Queue` | ✔ | The object class |
+>| vararg | `mixed` | ✔ | The object arguments |
 >
->Creates a new Future object that belongs to this EventLoop
->
->**Returns**:
->
->| Type | Description |
->| :-: | - |
->| `Future` | The Future object |
->
----
->### EventLoop:new_future_semaphore ( quantity )
->
->Creates a new FutureSemaphore object that belongs to this EventLoop
+>Creates a new asyncio object that belongs to this EventLoop
 >
 >**Returns**:
 >
 >| Type | Description |
 >| :-: | - |
->| `FutureSemaphore` | The FutureSemaphore object |
+>| `mixed` | The new object |
 >
 ---
 >### EventLoop:stop_task_execution (  )
