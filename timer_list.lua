@@ -70,13 +70,18 @@ do
 		@param timer<Timer> The timer to remove.
 	]]
 	function TimerList:remove(timer)
-		local current = self.last
+		if self.last == timer then
+			self.last = timer.previous
+			return
+		end
+
+		local current, last = self.last.previous, self.last
 		while current and current ~= timer do
-			current = current.previous
+			current, last = current.previous, current
 		end
 
 		if current then
-			current.previous = timer.previous
+			last.previous = timer.previous
 		end
 	end
 end
