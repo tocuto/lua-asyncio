@@ -56,4 +56,5 @@
 - [Timer_list](Timer_list.md)
 	- [TimerList.new](Timer_list.md#timerlistnew--obj-)
 	- [TimerList:add](Timer_list.md#timerlistadd--timer-)
+	- [TimerList:remove](Timer_list.md#timerlistremove--timer-)
 	- [TimerList:run](Timer_list.md#timerlistrun---)

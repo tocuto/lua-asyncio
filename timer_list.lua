@@ -27,6 +27,7 @@ do
 			callback<function> The callback function.
 			when<int> When it will be executed.
 		}
+		@returns Timer The timer you've added
 	]]
 	function TimerList:add(timer)
 		if not self.last then
@@ -44,6 +45,8 @@ do
 			timer.previous = self.last
 			self.last = timer
 		end
+
+		return timer
 	end
 
 	--[[@
@@ -57,6 +60,22 @@ do
 			current = current.previous
 		end
 		self.last = current
+	end
+
+	--[[@
+		@name remove
+		@desc Removes a timer from the list.
+		@param timer<Timer> The timer to remove.
+	]]
+	function TimerList:remove(timer)
+		local current = self.last
+		while current and current ~= timer do
+			current = current.previous
+		end
+
+		if current then
+			current.previous = timer.previous
+		end
 	end
 end
 

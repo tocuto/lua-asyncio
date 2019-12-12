@@ -34,8 +34,22 @@
 >Adds a timer to the list.<br>
 >`timer.callback` will receive the timer as the unique argument, so you can add more values here
 >
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `Timer` | The timer you've added |
+>
 ---
 >### TimerList:run (  )
 >
 >Runs the timers that need to be run.
+>
+---
+>### TimerList:remove ( timer )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| timer | `Timer` | ✔ | The timer to remove. |
+>
+>Removes a timer from the list.
 >
