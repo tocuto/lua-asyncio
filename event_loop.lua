@@ -63,6 +63,7 @@ do
 		}
 	]]
 	function EventLoop.timers_callback(callback)
+		callback.task.timer = nil
 		return callback.event_loop:add_task(callback.task)
 	end
 
@@ -88,8 +89,7 @@ do
 		@param delay<number> The time to sleep
 	]]
 	function EventLoop:sleep(delay)
-		self:call_soon(delay, self.current_task, true)
-		return self:stop_task_execution()
+		return self:sleep_until(time() + delay, self.current_task)
 	end
 
 	--[[@
@@ -110,7 +110,13 @@ do
 		@param when<number> The time when the task will be resumed
 	]]
 	function EventLoop:sleep_until(when)
-		self:schedule(when, self.current_task, true)
+		self.current_task.timer = self.timers:add {
+			callback = self.timers_callback,
+			when = when or 0,
+			task = self.current_task,
+			event_loop = self
+		}
+
 		return self:stop_task_execution()
 	end
 
@@ -123,7 +129,11 @@ do
 		@returns Future Returns the Future object if no_future is false.
 	]]
 	function EventLoop:schedule(when, task, no_future)
-		self.timers:add {
+		if task.ran_once then
+			error("Can't schedule a task that did already run or is running.")
+		end
+
+		task.timer = self.timers:add {
 			callback = self.timers_callback,
 			when = when or 0,
 			task = task,
@@ -253,7 +263,9 @@ do
 		for index = 1, length do
 			task = select(index, ...)
 			task:add_future(semaphore, index)
-			self:add_task(task)
+			if not task._is_future then
+				self:add_task(task)
+			end
 		end
 
 		return semaphore

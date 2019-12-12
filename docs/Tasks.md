@@ -27,6 +27,8 @@
 >	error = false or string, -- The error, if any
 >	done = false, -- Whether the task is done or not
 >	cancelled = false, -- Whether the task is cancelled or not
+>	timer = nil or Timer, -- nil if the task is not scheduled, a Timer object otherwise.
+>	ran_once = false -- Whether the task did run (or at least partially run)
 >}
 >```
 ---
