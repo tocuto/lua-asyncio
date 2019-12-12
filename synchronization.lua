@@ -1,8 +1,84 @@
 local tasks = require "lua-asyncio/tasks"
-local futures = require "lua-asyncio/futures"
+local async = tasks.async
 
-local Task = tasks.Task
-local Future = futures.Future
+local Lock
+do
+	Lock = {}
+	local meta = {__index = Lock}
+
+	--[[@
+		@name new
+		@desc Creates a new instance of Lock
+		@desc This is an object used to have exclusive access to shared resources.
+		@desc If a task acquired it, no other task can acquire the object again until this one releases it
+		@param loop<EventLoop> The EventLoop that the Lock belongs to.
+		@returns Lock The Lock object
+		@struct {
+			loop = loop, -- The EventLoop that the Lock belongs to
+			tasks = {}, -- The Tasks objects that are waiting to acquire the Lock
+			tasks_append = 0, -- The current tasks list "append" pointer
+			tasks_give = 0, -- The current tasks list "give" pointer
+			is_locked = false -- Whether the lock is set or not
+		}
+	]]
+	function Lock.new(loop, obj)
+		obj = obj or {}
+		obj.loop = loop
+		obj.tasks = {}
+		obj.tasks_append = 0
+		obj.tasks_give = 0
+		return setmetatable(obj, meta)
+	end
+
+	--[[@
+		@name acquire
+		@desc Returns a task that, when awaited, will block until the lock is acquired.
+		@returns Task The task
+	]]
+	Lock.acquire = async(function(self)
+		if self.is_locked then
+			self.tasks_append = self.tasks_append + 1
+			self.tasks[self.tasks_append] = self.loop.current_task
+			self.loop:stop_task_execution()
+		else
+			self.is_locked = true
+		end
+
+		self.task = self.loop.current_task._next_task
+		-- Basically, current_task = Lock.acquire, and _next_task = the function that awaited it
+	end)
+
+	--[[@
+		@name release
+		@desc Releases the lock and wakes up the next task waiting to acquire it, if any.
+	]]
+	function Lock:release()
+		if not self.is_locked then
+			error("Can't release an unlocked lock.", 2)
+		elseif self.loop.current_task ~= self.task then
+			print(self.loop.current_task, self.task)
+			error("Can't release the lock from a different task.", 2)
+		end
+
+		local give, task = self.tasks_give
+		while give < self.tasks_append do
+			give = give + 1
+			task = self.tasks[give]
+			self.tasks[give] = nil
+
+			if not task.cancelled and not task.done then
+				self.loop:add_task(task)
+				self.tasks_give = give
+				self.task = task.task
+				-- Doesn't unlock the object
+				return
+			end
+		end
+		self.tasks_give = give
+
+		self.is_locked = false
+	end
+end
 
 local Event
 do
@@ -70,5 +146,6 @@ do
 end
 
 return {
+	Lock = Lock,
 	Event = Event
 }
