@@ -416,11 +416,9 @@ do
 		@desc Removes the tasks that are waiting to be removed from the list.
 	]]
 	function OrderedEventLoop:remove_tasks()
-		local tasks, removed, remove = self.tasks, self.removed
+		local tasks, removed = self.tasks, self.removed
 		for index = self.removed_index, 1, -1 do
-			remove = removed[index]
-
-			remove(tasks, index)
+			remove(tasks, removed[index])
 			self.tasks_index = self.tasks_index - 1
 		end
 
