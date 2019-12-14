@@ -1,5 +1,7 @@
 local Future
 do
+	local yield = coroutine.yield
+
 	Future = {}
 	local meta = {__index = Future}
 
@@ -12,7 +14,6 @@ do
 		@param obj?<table> The table to turn into a Future.
 		@returns Future The Future object
 		@struct {
-			_is_future = true, -- used to denote that it is a Future object
 			loop = EventLoop, -- the loop that the future belongs to
 			_next_tasks = {}, -- the tasks that the Future is gonna run once it is done
 			_next_tasks_index = 0, -- the tasks table pointer
@@ -26,13 +27,56 @@ do
 	]]
 	function Future.new(loop, obj)
 		obj = obj or {}
-		obj._is_future = true
 		obj.loop = loop
 		obj._next_tasks = {}
 		obj._next_tasks_index = 0
 		obj.futures = {}
 		obj.futures_index = 0
 		return setmetatable(obj, meta)
+	end
+
+	--[[@
+		@name _can_await
+		@desc Throws an error if the Future can't be awaited.
+		@param loop<EventLoop> The EventLoop executing await
+	]]
+	function Future:_can_await(loop)
+		if self.cancelled then
+			error("Can't await a cancelled Future.", 3)
+		end
+	end
+
+	--[[@
+		@name _pause_await
+		@desc Returns whether the task awaiting this object needs to be paused or not
+		@param loop<EventLoop> The EventLoop executing await
+		@returns boolean If the task awaiting needs to be paused or not
+	]]
+	function Future:_pause_await(loop)
+		return not self.done
+	end
+
+	--[[@
+		@name _await
+		@desc Pauses the awaiting task, and returns once the result is done.
+		@param loop<EventLoop> The EventLoop executing await
+		@returns mixed The returned value.
+	]]
+	function Future:_await(loop)
+		if self.done then
+			if self.error then
+				loop.current_task.error = self.error
+			else
+				loop.current_task.arguments = self.result
+			end
+
+			return yield()
+		else
+			self._next_tasks_index = self._next_tasks_index + 1
+			self._next_tasks[self._next_tasks_index] = loop.current_task
+
+			return loop:stop_task_execution()
+		end
 	end
 
 	--[[@
@@ -151,7 +195,6 @@ do
 		@param obj?<table> The table to turn into a FutureSemaphore.
 		@returns FutureSemaphore The FutureSemaphore object
 		@struct {
-			_is_future = true, -- used to denote that it is a Future object
 			loop = EventLoop, -- the loop that the future belongs to
 			quantity = quantity, -- the quantity of values that the object will return
 			_done = 0, -- the quantity of values that the object has prepared

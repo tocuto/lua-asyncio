@@ -153,8 +153,11 @@ do
 		@param task<Task> The task to append
 	]]
 	function EventLoop:add_task(task)
-		self.tasks_index = self.tasks_index + 1
-		self.tasks[self.tasks_index] = task
+		if not task._scheduled then
+			self.tasks_index = self.tasks_index + 1
+			self.tasks[self.tasks_index] = task
+			task._scheduled = true
+		end
 	end
 
 	--[[@
@@ -179,31 +182,30 @@ do
 	end
 
 	--[[@
+		@name is_awaitable
+		@desc Checks if an object is awaitable or not.
+		@returns boolean Whether the object is awaitable or not
+	]]
+	function EventLoop:is_awaitable(aw)
+		return aw._pre_await and aw._await and aw._pause_await and aw.cancel
+	end
+
+	--[[@
 		@name await
 		@desc Awaits a Future or Task to complete. Pauses the current task and resumes it again once the awaitable is done.
 		@param aw<Future,Task> The awaitable to wait.
 		@returns mixed The Future or Task return values.
 	]]
 	function EventLoop:await(aw)
-		if aw.cancelled or aw.done then
-			error("Can't await a cancelled or done awaitable.", 2)
+		if not self:is_awaitable(aw) then
+			error("The given object is not awaitable.", 2)
 		end
 
-		if aw._is_future then
-			-- if it is a future object it can't be appended to the task list _yet_
-			aw._next_tasks_index = aw._next_tasks_index + 1
-			aw._next_tasks[aw._next_tasks_index] = self.current_task
-		else
-			if aw._next_task then
-				error("Can't re-use a task. Use Futures instead.", 2)
-			end
-
-			aw.paused = false
-			aw._next_task = self.current_task
-			self:add_task(aw)
+		aw:_pre_await(self)
+		if aw:_pause_await(self) then
+			self.current_task.awaiting = aw
 		end
-		self.current_task.awaiting = aw
-		return self:stop_task_execution()
+		return aw:_await(self)
 	end
 
 	--[[@
@@ -318,6 +320,7 @@ do
 	function EventLoop:remove_later(index)
 		self.removed_index = self.removed_index + 1
 		self.removed[self.removed_index] = index
+		self.tasks[index]._scheduled = false
 	end
 
 	--[[@

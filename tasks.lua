@@ -28,7 +28,9 @@ do
 			done = false, -- Whether the task is done or not
 			cancelled = false, -- Whether the task is cancelled or not
 			timer = nil or Timer, -- nil if the task is not scheduled, a Timer object otherwise.
-			ran_once = false -- Whether the task did run (or at least partially run)
+			ran_once = false, -- Whether the task did run (or at least partially run)
+			_scheduled = false, -- Whether the task is scheduled or not (in EventLoop.tasks)
+			_is_error_handler = false -- Whether the task is the error handler or not
 		}
 	]]
 	function Task.new(fnc, args, obj)
@@ -38,6 +40,45 @@ do
 		obj.futures = {}
 		obj.futures_index = 0
 		return setmetatable(obj, meta)
+	end
+
+	--[[@
+		@name _can_await
+		@desc Throws an error if the Task can't be awaited.
+		@param loop<EventLoop> The EventLoop executing await
+	]]
+	function Task:_can_await(loop)
+		if self.cancelled or self.done then
+			error("Can't await a cancelled or done Task.", 3)
+		end
+	end
+
+	--[[@
+		@name _pause_await
+		@desc Returns whether the task awaiting this one needs to be paused or not
+		@param loop<EventLoop> The EventLoop executing await
+		@returns boolean If the task awaiting needs to be paused or not
+	]]
+	function Task:_pause_await(loop)
+		return true
+	end
+
+	--[[@
+		@name _await
+		@desc Schedules this task, pauses the awaiting one, and returns once the result is done.
+		@param loop<EventLoop> The EventLoop executing await
+		@returns mixed The returned value.
+	]]
+	function Task:_await(loop)
+		if self._next_task then
+			error("Can't await a Task more than once. Use Futures instead.", 3)
+		end
+
+		self.paused = false
+		self._next_task = loop.current_task
+
+		loop:add_task(self)
+		return loop:stop_task_execution()
 	end
 
 	--[[@
