@@ -39,7 +39,8 @@ do
 			tasks = {}, -- The list of tasks the EventLoop is running
 			removed = {}, -- The list of indexes in the tasks list to remove
 			tasks_index = 0, -- The tasks list pointer
-			removed_index = 0 -- The removed list pointer
+			removed_index = 0, -- The removed list pointer
+			error_handler = nil -- The error handler. It must be a function (which receive the error and the task), and if it returns a Task it will be awaited.
 		}
 	]]
 	function EventLoop.new(obj)
@@ -307,6 +308,16 @@ do
 			end
 
 			self:add_task(_next)
+		elseif self.error_handler and not task._is_error_handler then
+			-- If the eventloop has an error handler, and the task is the product of it,
+			-- we can't run the error handler again, otherwise it will create an infinite loop.
+
+			local result = self.error_handler(task.error, task)
+
+			if self:is_awaitable(result) and result.coro then -- It is a task!
+				result._is_error_handler = true
+				self:add_task(result)
+			end
 		else
 			error(task.error)
 		end
