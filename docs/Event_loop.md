@@ -33,7 +33,8 @@
 >	tasks = {}, -- The list of tasks the EventLoop is running
 >	removed = {}, -- The list of indexes in the tasks list to remove
 >	tasks_index = 0, -- The tasks list pointer
->	removed_index = 0 -- The removed list pointer
+>	removed_index = 0, -- The removed list pointer
+>	error_handler = nil -- The error handler. It must be a function (which receive the error and the task), and if it returns a Task it will be awaited.
 >}
 >```
 ---
@@ -144,6 +145,17 @@
 >
 >Pauses the task execution. This can be called from inside the task only.<br>
 >![/!\\](https://i.imgur.com/HQ188PK.png) The task doesn't resume again if you don't append it back later. If you don't do it, this will just stop forever the task execution.
+>
+---
+>### EventLoop:is_awaitable ( aw )
+>
+>Checks if an object is awaitable or not.
+>
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `boolean` | Whether the object is awaitable or not |
 >
 ---
 >### EventLoop:await ( aw )

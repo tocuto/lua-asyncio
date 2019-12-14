@@ -18,7 +18,6 @@
 >**Table structure**:
 >```Lua
 >{
->	_is_future = true, -- used to denote that it is a Future object
 >	loop = EventLoop, -- the loop that the future belongs to
 >	_next_tasks = {}, -- the tasks that the Future is gonna run once it is done
 >	_next_tasks_index = 0, -- the tasks table pointer
@@ -30,6 +29,42 @@
 >	done = false -- whether the future is done or not
 >}
 >```
+---
+>### Future:_can_await ( loop )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| loop | `EventLoop` | ✔ | The EventLoop executing await |
+>
+>Throws an error if the Future can't be awaited.
+>
+---
+>### Future:_pause_await ( loop )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| loop | `EventLoop` | ✔ | The EventLoop executing await |
+>
+>Returns whether the task awaiting this object needs to be paused or not
+>
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `boolean` | If the task awaiting needs to be paused or not |
+>
+---
+>### Future:_await ( loop )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| loop | `EventLoop` | ✔ | The EventLoop executing await |
+>
+>Pauses the awaiting task, and returns once the result is done.
+>
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `mixed` | The returned value. |
+>
 ---
 >### Future:cancel (  )
 >
@@ -84,7 +119,6 @@
 >**Table structure**:
 >```Lua
 >{
->	_is_future = true, -- used to denote that it is a Future object
 >	loop = EventLoop, -- the loop that the future belongs to
 >	quantity = quantity, -- the quantity of values that the object will return
 >	_done = 0, -- the quantity of values that the object has prepared

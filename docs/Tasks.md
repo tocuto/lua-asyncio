@@ -28,9 +28,47 @@
 >	done = false, -- Whether the task is done or not
 >	cancelled = false, -- Whether the task is cancelled or not
 >	timer = nil or Timer, -- nil if the task is not scheduled, a Timer object otherwise.
->	ran_once = false -- Whether the task did run (or at least partially run)
+>	ran_once = false, -- Whether the task did run (or at least partially run)
+>	_scheduled = false, -- Whether the task is scheduled or not (in EventLoop.tasks)
+>	_is_error_handler = false -- Whether the task is the error handler or not
 >}
 >```
+---
+>### Task:_can_await ( loop )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| loop | `EventLoop` | ✔ | The EventLoop executing await |
+>
+>Throws an error if the Task can't be awaited.
+>
+---
+>### Task:_pause_await ( loop )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| loop | `EventLoop` | ✔ | The EventLoop executing await |
+>
+>Returns whether the task awaiting this one needs to be paused or not
+>
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `boolean` | If the task awaiting needs to be paused or not |
+>
+---
+>### Task:_await ( loop )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| loop | `EventLoop` | ✔ | The EventLoop executing await |
+>
+>Schedules this task, pauses the awaiting one, and returns once the result is done.
+>
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `mixed` | The returned value. |
+>
 ---
 >### Task:cancel (  )
 >
