@@ -28,6 +28,7 @@
 	- [EventLoop:remove_later](Event_loop.md#eventloopremove_later--index-)
 	- [EventLoop:remove_tasks](Event_loop.md#eventloopremove_tasks---)
 	- [EventLoop:run](Event_loop.md#eventlooprun---)
+	- [EventLoop:run_until_complete](Event_loop.md#eventlooprun_until_complete--task-)
 	- [EventLoop:run_tasks](Event_loop.md#eventlooprun_tasks---)
 	- [EventLoop:schedule](Event_loop.md#eventloopschedule--when-task-no_future-)
 	- [EventLoop:sleep](Event_loop.md#eventloopsleep--delay-)

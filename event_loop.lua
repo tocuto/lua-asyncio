@@ -21,6 +21,7 @@ end
 local EventLoop
 do
 	local time = os.time
+	local unpack = table.unpack
 	local yield = coroutine.yield
 
 	EventLoop = {}
@@ -275,6 +276,24 @@ do
 		self.timers:run()
 		self:run_tasks()
 		self:remove_tasks()
+	end
+
+	--[[@
+		@name run_until_complete
+		@desc Schedules the task, adds a future and runs the loop until the task is done.
+		@param task<Task> The task
+		@returns mixed The values the task returns
+	]]
+	function EventLoop:run_until_complete(task)
+		local future = self:new_object(Future)
+		task:add_future(future)
+
+		self:add_task(task)
+		while not future.done do
+			self:run()
+		end
+
+		return unpack(future.result)
 	end
 
 	--[[@

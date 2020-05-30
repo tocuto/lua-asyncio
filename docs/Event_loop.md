@@ -228,6 +228,20 @@
 >Runs a loop iteration.
 >
 ---
+>### EventLoop:run_until_complete ( task )
+>| Parameter | Type | Required | Description |
+>| :-: | :-: | :-: | - |
+>| task | `Task` | ✔ | The task |
+>
+>Schedules the task, adds a future and runs the loop until the task is done.
+>
+>**Returns**:
+>
+>| Type | Description |
+>| :-: | - |
+>| `mixed` | The values the task returns |
+>
+---
 >### EventLoop:handle_error ( task, index )
 >| Parameter | Type | Required | Description |
 >| :-: | :-: | :-: | - |
